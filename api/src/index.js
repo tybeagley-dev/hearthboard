@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
+import { rateLimit } from 'express-rate-limit'
 import { db } from './db/client.js'
 
 import choreRoutes from './routes/chores.js'
@@ -21,6 +22,19 @@ const app = express()
 
 app.use(cors())
 app.use(express.json())
+
+// General rate limit — 300 requests per minute per IP
+app.use(rateLimit({ windowMs: 60_000, max: 300, standardHeaders: true, legacyHeaders: false }))
+
+// Strict limit on any request carrying a parent token — 20 per minute per IP
+const parentLimit = rateLimit({
+  windowMs: 60_000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: req => !req.headers['x-parent-token'],
+})
+app.use(parentLimit)
 
 app.get('/health', async (_req, res) => {
   try {
