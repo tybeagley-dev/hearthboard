@@ -71,7 +71,6 @@ router.get('/pending-approvals', async (_req, res) => {
   res.json(rows)
 })
 
-// POST /chores/:id/accept  { child, choreLabel, bucks }
 // DELETE /chores/:id/assignment?child=Name
 router.delete('/:id/assignment', requireParent, async (req, res) => {
   const { child } = req.query
@@ -79,29 +78,40 @@ router.delete('/:id/assignment', requireParent, async (req, res) => {
   if (!child) return res.status(400).json({ error: 'child required' })
   const today = new Date().toISOString().slice(0, 10)
 
-  const { rowCount } = await db.query(
-    `DELETE FROM chore_events
-     WHERE child = $1 AND chore_id = $2 AND created_at::date = $3 AND status = 'accepted'`,
-    [child, choreId, today]
-  )
-  if (!rowCount) return res.status(404).json({ error: 'No accepted assignment found' })
-  broadcast('chore_state', { child })
-  res.json({ success: true })
+  try {
+    const { rowCount } = await db.query(
+      `DELETE FROM chore_events
+       WHERE child = $1 AND chore_id = $2 AND created_at::date = $3
+         AND status IN ('accepted', 'pending_approval')`,
+      [child, choreId, today]
+    )
+    if (!rowCount) return res.status(404).json({ error: 'No active assignment found for today' })
+    broadcast('chore_state', { child })
+    res.json({ success: true })
+  } catch (err) {
+    console.error('unassign error', err)
+    res.status(500).json({ error: 'Failed to unassign chore' })
+  }
 })
 
 // POST /chores/:id/accept  { child, choreLabel, bucks }
 router.post('/:id/accept', async (req, res) => {
   const { child, choreLabel, bucks } = req.body
   const choreId = req.params.id
-  if (!child || !choreId) return res.status(400).json({ error: 'Missing params' })
+  if (!child || !choreId || !choreLabel) return res.status(400).json({ error: 'Missing params' })
 
-  await db.query(
-    `INSERT INTO chore_events (child, chore_id, chore_label, bucks, status, accepted_at)
-     VALUES ($1, $2, $3, $4, 'accepted', NOW())`,
-    [child, choreId, choreLabel, bucks]
-  )
-  broadcast('chore_state', { child })
-  res.json({ success: true })
+  try {
+    await db.query(
+      `INSERT INTO chore_events (child, chore_id, chore_label, bucks, status, accepted_at)
+       VALUES ($1, $2, $3, $4, 'accepted', NOW())`,
+      [child, choreId, choreLabel, bucks]
+    )
+    broadcast('chore_state', { child })
+    res.json({ success: true })
+  } catch (err) {
+    console.error('accept error', err)
+    res.status(500).json({ error: 'Failed to accept chore' })
+  }
 })
 
 // POST /chores/:id/request-approval  { child, choreLabel, bucks }
