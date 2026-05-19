@@ -2,6 +2,7 @@
   "name": "hearthboard",
   "private": true,
   "workspaces": [
-    "api"
+    "api",
+    "apps/dashboard"
   ]
 }

@@ -72,6 +72,24 @@ router.get('/pending-approvals', async (_req, res) => {
 })
 
 // POST /chores/:id/accept  { child, choreLabel, bucks }
+// DELETE /chores/:id/assignment?child=Name
+router.delete('/:id/assignment', requireParent, async (req, res) => {
+  const { child } = req.query
+  const choreId = req.params.id
+  if (!child) return res.status(400).json({ error: 'child required' })
+  const today = new Date().toISOString().slice(0, 10)
+
+  const { rowCount } = await db.query(
+    `DELETE FROM chore_events
+     WHERE child = $1 AND chore_id = $2 AND created_at::date = $3 AND status = 'accepted'`,
+    [child, choreId, today]
+  )
+  if (!rowCount) return res.status(404).json({ error: 'No accepted assignment found' })
+  broadcast('chore_state', { child })
+  res.json({ success: true })
+})
+
+// POST /chores/:id/accept  { child, choreLabel, bucks }
 router.post('/:id/accept', async (req, res) => {
   const { child, choreLabel, bucks } = req.body
   const choreId = req.params.id
