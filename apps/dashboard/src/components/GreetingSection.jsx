@@ -1,7 +1,7 @@
 import { formatDate, formatTime, getGreeting } from '../utils/dateUtils'
 import { CONFIG } from '../config/config'
 
-export default function GreetingSection({ now, onGrocery, onParentOpen }) {
+export default function GreetingSection({ now, onGrocery }) {
   return (
     <div className="greeting-section">
       <div className="greeting-body">
@@ -15,10 +15,10 @@ export default function GreetingSection({ now, onGrocery, onParentOpen }) {
         </div>
       </div>
       <div className="greeting-pills">
-        <button className="greeting-pill" onClick={onGrocery}>
+        <button className="greeting-pill grocery-pill" onClick={onGrocery}>
           grocery list
         </button>
-        <button className="greeting-pill" onClick={onParentOpen}>
+        <button className="greeting-pill token-pill">
           token trading
         </button>
       </div>

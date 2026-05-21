@@ -57,13 +57,12 @@ export default function App() {
 
   return (
     <div className="dashboard">
-      <FloatingControls weather={weather} onParentOpen={() => setShowParentPanel(true)} />
+      <FloatingControls onParentOpen={() => setShowParentPanel(true)} />
 
       <div className="dashboard-top">
         <GreetingSection
           now={now}
           onGrocery={() => setShowGrocery(true)}
-          onParentOpen={() => setShowParentPanel(true)}
         />
         <div className="center-stack">
           <WeatherCard weather={weather} />

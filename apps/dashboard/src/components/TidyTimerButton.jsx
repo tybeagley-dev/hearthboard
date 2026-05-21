@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { Brush } from 'lucide-react'
 import { CONFIG } from '../config/config'
 
 const DURATION_OPTIONS = [5, 10, 15, 20]
@@ -66,11 +67,11 @@ export default function TidyTimerButton({ onStart }) {
   return (
     <div className="tidy-btn-wrap" ref={popoverRef}>
       <button
-        className="tidy-trigger-btn"
+        className="timer-icon-btn"
         onClick={() => setOpen(o => !o)}
         title="Tidy Time"
       >
-        🧹
+        <Brush size={18} strokeWidth={1.8} />
       </button>
 
       {open && (

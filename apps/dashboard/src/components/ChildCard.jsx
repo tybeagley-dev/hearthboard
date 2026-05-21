@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from 'react'
+import { Monitor, Coins } from 'lucide-react'
 import RoutineItem from './RoutineItem'
 import Confetti from './Confetti'
 import ChoreInstructionsModal from './ChoreInstructionsModal'
@@ -86,7 +87,7 @@ export default function ChildCard({ child, routines, routinesLoading, chores, ch
   return (
     <div
       className={`child-card ${allDone ? 'all-done' : ''}`}
-      style={{ '--child-color': child.color, background: `color-mix(in srgb, ${child.color} 15%, white)`, position: 'relative' }}
+      style={{ '--child-color': child.color, background: `color-mix(in srgb, ${child.color} 22%, #F2EDE4)`, position: 'relative' }}
     >
       <Confetti triggerKey={confettiKey} />
 
@@ -125,7 +126,7 @@ export default function ChildCard({ child, routines, routinesLoading, chores, ch
             onClick={onScreenTime}
             title={balance > 0 ? `${balance} min screen time` : 'Screen Time'}
           >
-            <span>⏱</span>
+            <Monitor size={16} strokeWidth={1.8} />
             {balance > 0 && <span className="child-icon-badge">{balance}m</span>}
           </button>
 
@@ -134,7 +135,7 @@ export default function ChildCard({ child, routines, routinesLoading, chores, ch
             onClick={onBucks}
             title={`${bucks} Beagley Bucks`}
           >
-            <span>🪙</span>
+            <Coins size={16} strokeWidth={1.8} />
             {bucks > 0 && <span className="child-icon-badge">{bucks}</span>}
           </button>
 

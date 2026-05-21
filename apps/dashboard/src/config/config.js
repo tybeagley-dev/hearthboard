@@ -12,9 +12,9 @@ export const CONFIG = {
   // color: used for the avatar background and card accent
   // emoji: shown in the avatar (until you add a real photo)
   children: [
-    { name: 'Paige',   color: '#f51bf1', emoji: '🐱' },
-    { name: 'Nolan',   color: '#3e3ee6', emoji: '🧑🏼‍🚀' },
-    { name: 'Jonah',  color: '#029602', emoji: '⚾️' }, // ← update name & emoji
+    { name: 'Paige',  color: '#C4837A', emoji: '🐱' },
+    { name: 'Nolan',  color: '#6B8BA4', emoji: '🧑🏼‍🚀' },
+    { name: 'Jonah',  color: '#7D9B76', emoji: '⚾️' },
   ],
 
   // ── Weather ────────────────────────────────────────────────────────────────

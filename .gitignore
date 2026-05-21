@@ -5,3 +5,4 @@ node_modules/
 .DS_Store
 apps/dashboard/dist/
 NEXT_UP.md
+api/node_modules/
