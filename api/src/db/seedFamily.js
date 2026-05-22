@@ -67,6 +67,15 @@ for (const c of children) {
   )
 }
 
+// Validate NOT VALID constraints now that all rows are backfilled
+const validateTables = [
+  'bucks_balance', 'screen_time_balance', 'timers', 'meals', 'routine_log',
+]
+for (const t of validateTables) {
+  await db.query(`ALTER TABLE ${t} VALIDATE CONSTRAINT ${t}_pkey`)
+  console.log(`  ${t}_pkey constraint validated`)
+}
+
 // Enforce NOT NULL now that all rows are backfilled
 const alterTables = [
   'chores', 'routine_defs', 'mom_store', 'chore_events', 'spend_events',
