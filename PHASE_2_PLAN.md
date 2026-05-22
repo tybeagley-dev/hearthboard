@@ -44,3 +44,5 @@ Remove `children` array from `config.js`. Keep other config (weather, schedules,
 - `GET /children` returns Paige, Nolan, Jonah from DB
 - Dashboard renders correctly with children from API (not config)
 - Add/edit/remove child in Parent Panel → reflects in dashboard immediately
+
+Also of note—30 minutes of screentime should be given by default at the start of each weekday, but it can be accumulated. 
