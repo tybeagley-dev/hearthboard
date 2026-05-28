@@ -25,12 +25,12 @@ export default function RoutineItem({ routine, onToggle }) {
 
   if (routine.cooldownMins > 0) {
     return (
-      <div className="routine-item cooldown">
+      <button className="routine-item cooldown" onClick={onToggle}>
         <span className="routine-check pending-check">🔒</span>
         <span className="routine-icon">{routine.icon}</span>
         <span className="routine-label">{routine.label}</span>
         <span className="routine-pending-badge">Ready in {routine.cooldownMins} min</span>
-      </div>
+      </button>
     )
   }
 

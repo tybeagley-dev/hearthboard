@@ -11,6 +11,17 @@ import { startChimeLoop, stopChimeLoop } from '../utils/chime'
 import { CONFIG } from '../config/config'
 import ZoneCard from './ZoneCard'
 
+const COOLDOWN_MESSAGES = [
+  "Nice try, speedy.",
+  "That was fast. Probably too fast.",
+  "The chore fairy isn't convinced.",
+  "Already? Really?",
+  "Not yet, amigo.",
+  "Cool your jets.",
+  "Go check one more time and come back in a few minutes.",
+  "The clock says no.",
+]
+
 function isChoreDay() {
   return new Date().getDay() !== 0
 }
@@ -67,7 +78,7 @@ export default function ChildCard({ child, now, routines, routinesLoading, chore
 
   const [instructionsChore, setInstructionsChore] = useState(null)
   const [submitting, setSubmitting] = useState(new Set())
-  const [cooldownToast, setCooldownToast] = useState(false)
+  const [cooldownToast, setCooldownToast] = useState(null)
 
   async function handleChoreRequest(chore) {
     if (submitting.has(chore.id)) return
@@ -86,8 +97,9 @@ export default function ChildCard({ child, now, routines, routinesLoading, chore
   function handleChoreTap(chore) {
     if (chore.completed || chore.pending || submitting.has(chore.id)) return
     if (cooldownMinsRemaining(chore) > 0) {
-      setCooldownToast(true)
-      setTimeout(() => setCooldownToast(false), 3000)
+      const msg = COOLDOWN_MESSAGES[Math.floor(Math.random() * COOLDOWN_MESSAGES.length)]
+      setCooldownToast(msg)
+      setTimeout(() => setCooldownToast(null), 3000)
       return
     }
     if (chore.instructions?.length) setInstructionsChore(chore)
@@ -204,9 +216,7 @@ export default function ChildCard({ child, now, routines, routinesLoading, chore
       </div>
 
       {cooldownToast && (
-        <div className="cooldown-toast">
-          You may be fast, but are you sure the chore is actually done already?
-        </div>
+        <div className="cooldown-toast">{cooldownToast}</div>
       )}
 
       {instructionsChore && (
