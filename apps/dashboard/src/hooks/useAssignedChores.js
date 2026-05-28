@@ -35,7 +35,8 @@ function saveAssignments(assignments) {
 }
 
 function buildFromApi(childName, todayEntries, weekCompleted, chores) {
-  const weekDone = new Set(weekCompleted[childName] ?? [])
+  const weekDone    = new Set(weekCompleted[childName] ?? [])
+  const todayLocal  = getTodayKey(new Date())
 
   const required = chores
     .filter(c =>
@@ -65,7 +66,14 @@ function buildFromApi(childName, todayEntries, weekCompleted, chores) {
         acceptedAt:   entry.acceptedAt ?? null,
       }
     })
-    .filter(c => !c.required)
+    .filter(c => {
+      if (c.required) return false
+      // Exclude spin chores accepted on a previous local day — UTC timestamps can
+      // shift a late-evening acceptance into the next UTC date, causing yesterday's
+      // pending chores to appear on today's card.
+      if (!c.acceptedAt) return true
+      return getTodayKey(new Date(c.acceptedAt)) >= todayLocal
+    })
 
   return [...required, ...spin]
 }
