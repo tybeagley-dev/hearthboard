@@ -161,7 +161,7 @@ export default function ParentApprovalsTab({ children = [] }) {
           {abstinenceRequests.map(item => {
             const child   = children.find(c => c.name === item.child)
             const busy    = acting === `abs-${item.id}`
-            const dateStr = new Date(item.date + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })
+            const dateStr = new Date(item.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' })
             return (
               <div key={item.id} className="approval-row">
                 <div className="approval-info">
