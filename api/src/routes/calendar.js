@@ -123,7 +123,7 @@ function expandRRule(dtstart, rruleStr, now, cutoff) {
   return occurrences
 }
 
-function expandEvent(props, color, calName, calChild, now, cutoff) {
+function expandEvent(props, color, calName, calChild, now, cutoff, isFamily) {
   const summary    = props['SUMMARY'] || '(No title)'
   const dtstart    = parseIcalDate(props['DTSTART'])
   const dtend      = parseIcalDate(props['DTEND'])
@@ -133,7 +133,7 @@ function expandEvent(props, color, calName, calChild, now, cutoff) {
     ? dtend.jsDate.getTime() - dtstart.jsDate.getTime()
     : 0
 
-  const base = { color, calendarName: calName, child: calChild ?? null }
+  const base = { color, calendarName: calName, child: calChild ?? null, family: isFamily ?? false }
   const results = []
 
   if (props['RRULE']) {
@@ -165,7 +165,7 @@ function expandEvent(props, color, calName, calChild, now, cutoff) {
   return results
 }
 
-function parseIcal(text, color, calName, calChild, now, cutoff) {
+function parseIcal(text, color, calName, calChild, now, cutoff, isFamily) {
   const unfolded = text.replace(/\r\n[ \t]/g, '').replace(/\n[ \t]/g, '')
   const lines    = unfolded.split(/\r\n|\n/)
   const events   = []
@@ -178,7 +178,7 @@ function parseIcal(text, color, calName, calChild, now, cutoff) {
       props   = {}
     } else if (line === 'END:VEVENT') {
       inEvent = false
-      events.push(...expandEvent(props, color, calName, calChild, now, cutoff))
+      events.push(...expandEvent(props, color, calName, calChild, now, cutoff, isFamily))
     } else if (inEvent) {
       const colon = line.indexOf(':')
       if (colon === -1) continue
@@ -198,7 +198,7 @@ function parseIcal(text, color, calName, calChild, now, cutoff) {
 
 async function fetchAndParseCalendars(familyId) {
   const { rows } = await db.query(
-    `SELECT c.id, c.name, c.url, c.color, ch.name AS child_name
+    `SELECT c.id, c.name, c.url, c.color, c.family AS is_family, ch.name AS child_name
      FROM calendars c
      LEFT JOIN children ch ON ch.id = c.child_id
      WHERE c.family_id = $1`,
@@ -214,7 +214,7 @@ async function fetchAndParseCalendars(familyId) {
       const res = await fetch(url)
       if (!res.ok) return
       const text   = await res.text()
-      const events = parseIcal(text, cal.color, cal.name, cal.child_name ?? null, now, cutoff)
+      const events = parseIcal(text, cal.color, cal.name, cal.child_name ?? null, now, cutoff, cal.is_family)
       all.push(...events)
     } catch {
       // skip calendars that fail to fetch
@@ -238,16 +238,16 @@ router.get('/events', async (req, res) => {
   }
   const { child } = req.query
   const data = child
-    ? entry.data.filter(e => e.child === child || e.child === null)
+    ? entry.data.filter(e => e.child === child || (e.child === null && e.family))
     : entry.data
   res.json(data)
 })
 
 // ── Calendar URL management (parent only) ─────────────────────────────────────
 
-router.get('/', requireParent, async (req, res) => {
+router.get('/', async (req, res) => {
   const { rows } = await db.query(
-    `SELECT c.id, c.family_id, c.name, c.url, c.color, c.child_id, ch.name AS child
+    `SELECT c.id, c.family_id, c.name, c.url, c.color, c.child_id, c.family AS is_family, ch.name AS child
      FROM calendars c
      LEFT JOIN children ch ON ch.id = c.child_id
      WHERE c.family_id = $1
@@ -258,26 +258,26 @@ router.get('/', requireParent, async (req, res) => {
 })
 
 router.post('/', requireParent, async (req, res) => {
-  const { name, url, color, child } = req.body
+  const { name, url, color, child, is_family } = req.body
   if (!name || !url) return res.status(400).json({ error: 'Missing params' })
   const childId = child ? await resolveChildId(req.familyId, child) : null
   if (child && !childId) return res.status(400).json({ error: 'Unknown child' })
   const id = Date.now().toString(36)
   await db.query(
-    `INSERT INTO calendars (id, family_id, name, url, color, child_id) VALUES ($1,$2,$3,$4,$5,$6)`,
-    [id, req.familyId, name, url, color ?? '#C17A4A', childId]
+    `INSERT INTO calendars (id, family_id, name, url, color, child_id, family) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+    [id, req.familyId, name, url, color ?? '#C17A4A', childId, is_family ?? false]
   )
   cacheMap.delete(req.familyId)
   res.json({ success: true, id })
 })
 
 router.put('/:id', requireParent, async (req, res) => {
-  const { name, url, color, child } = req.body
+  const { name, url, color, child, is_family } = req.body
   const childId = child ? await resolveChildId(req.familyId, child) : null
   if (child && !childId) return res.status(400).json({ error: 'Unknown child' })
   await db.query(
-    `UPDATE calendars SET name=$1, url=$2, color=$3, child_id=$4 WHERE id=$5 AND family_id=$6`,
-    [name, url, color, childId, req.params.id, req.familyId]
+    `UPDATE calendars SET name=$1, url=$2, color=$3, child_id=$4, family=$5 WHERE id=$6 AND family_id=$7`,
+    [name, url, color, childId, is_family ?? false, req.params.id, req.familyId]
   )
   cacheMap.delete(req.familyId)
   res.json({ success: true })

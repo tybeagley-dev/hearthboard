@@ -302,7 +302,7 @@ const calendars = [
   { id: 'cal-nolan',    name: 'Nolan',          url: 'https://p118-caldav.icloud.com/published/2/MTY5MzEyODk0NjE2OTMxMoW06AapHVD6ytlRsuhNuM2QSFSLiAKLLXlokGOQX-9c',                                              color: '#3177e8', childId: 'child_nolan' },
   { id: 'cal-paige',    name: 'Paige',          url: 'https://p118-caldav.icloud.com/published/2/MTY5MzEyODk0NjE2OTMxMoW06AapHVD6ytlRsuhNuM3tt4H2s8oHVICuxmZjlZw5',                                              color: '#ed02d6', childId: 'child_paige' },
   { id: 'cal-jonah',    name: 'Jonah',          url: 'https://p118-caldav.icloud.com/published/2/MTY5MzEyODk0NjE2OTMxMoW06AapHVD6ytlRsuhNuM2gPgqpt7fUeZrzensL0lj2cowNnhYkMQhYkMQwonO08nVhe5TwJQkCHuHE',          color: '#02e03a', childId: 'child_jonah' },
-  { id: 'cal-family-1', name: 'Family',         url: 'https://p119-caldav.icloud.com/published/2/MTgwMDA2MTE0MDE4MDAwNsv_BNc9k7uQvjhj2Cr_-pBXT-pUG0Erd5OKpf_r8SfFXFirAmGcUI5Z66iKvpaLpg-UhoJn8TxFAttndI6VjDY', color: '#6319d1', childId: null },
+  { id: 'cal-family-1', name: 'Dad',            url: 'https://p119-caldav.icloud.com/published/2/MTgwMDA2MTE0MDE4MDAwNsv_BNc9k7uQvjhj2Cr_-pBXT-pUG0Erd5OKpf_r8SfFXFirAmGcUI5Z66iKvpaLpg-UhoJn8TxFAttndI6VjDY', color: '#6319d1', childId: null },
   { id: 'cal-family-2', name: 'Family',         url: 'https://p118-caldav.icloud.com/published/2/MTY5MzEyODk0NjE2OTMxMoW06AapHVD6ytlRsuhNuM3aUSDgKsxbojz80oW22UFJVG9apmKzuW_87TBoHaqaAnG_5TTHSytYdzw_UIgZuSI', color: '#f20717', childId: null },
   { id: 'cal-jack',     name: 'Jack',           url: 'https://p118-caldav.icloud.com/published/2/MTY5MzEyODk0NjE2OTMxMoW06AapHVD6ytlRsuhNuM1noE7vMVFJ6FDNhx3s9tJgddgZjwGGmZ_zKSXgrIJx3spyJCuNhytSN4YJ9xaKdwg', color: '#fa8f02', childId: null },
   { id: 'cal-mom',      name: 'Mom',            url: 'https://p118-caldav.icloud.com/published/2/MTY5MzEyODk0NjE2OTMxMoW06AapHVD6ytlRsuhNuM3mscQRBX0IM5TRukxOMVYJt_8sVv0-K0AfpaKSHrTnyv8QAWkU2qCZIvxvh1LoYnA', color: '#4f1073', childId: null },
@@ -310,10 +310,10 @@ const calendars = [
 ]
 for (const cal of calendars) {
   await db.query(
-    `INSERT INTO calendars (id, family_id, name, url, color, child_id)
-     VALUES ($1, $2, $3, $4, $5, $6)
+    `INSERT INTO calendars (id, family_id, name, url, color, child_id, family)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
      ON CONFLICT (id) DO NOTHING`,
-    [cal.id, FAMILY_ID, cal.name, cal.url, cal.color, cal.childId]
+    [cal.id, FAMILY_ID, cal.name, cal.url, cal.color, cal.childId, cal.isFamily ?? false]
   )
 }
 console.log('calendars seeded')
