@@ -3,6 +3,7 @@ import { db } from '../db/client.js'
 import { requireFamily } from '../middleware/requireFamily.js'
 import { broadcast } from './events.js'
 import { resolveChildId } from '../db/resolveChild.js'
+import { notifyParent, notifyChild } from '../utils/push.js'
 
 const router = Router()
 
@@ -109,6 +110,7 @@ router.post('/:child/request-purchase', async (req, res) => {
   )
 
   broadcast('screen_time_requests', { type: 'purchase_requested', child: childName })
+  notifyParent(req.familyId, { title: 'Screen time requested', body: `${childName} wants to trade ${bucksAmount} BB for ${minutesAmount} minutes` })
   res.json({ success: true, requestId: rows[0].id, bucksAmount, minutesAmount })
 })
 
@@ -190,6 +192,7 @@ router.post('/purchase-requests/:id/approve', async (req, res) => {
     const childName = childRows[0]?.name
     broadcast('bucks', { child: childName })
     broadcast('screen_time', { child: childName })
+    notifyChild(req.familyId, request.child_id, { title: 'Screen time approved!', body: `${request.minutes_amount} minutes added to your balance` })
     res.json({ success: true })
   } catch (err) {
     await client.query('ROLLBACK')

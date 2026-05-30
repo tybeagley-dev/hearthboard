@@ -32,9 +32,11 @@ export function apiPut(path, body, parentToken) {
   })
 }
 
-export function apiDelete(path, parentToken) {
+export function apiDelete(path, bodyOrToken, parentToken) {
+  const hasBody = bodyOrToken && typeof bodyOrToken === 'object'
   return apiFetch(path, {
     method: 'DELETE',
+    body:    hasBody ? JSON.stringify(bodyOrToken) : undefined,
     headers: parentToken ? { 'x-parent-token': parentToken } : {},
   })
 }

@@ -4,6 +4,7 @@ import { requireFamily } from '../middleware/requireFamily.js'
 import { requireParent } from '../middleware/requireParent.js'
 import { broadcast } from './events.js'
 import { resolveChildId } from '../db/resolveChild.js'
+import { notifyParent, notifyChild } from '../utils/push.js'
 
 const router = Router()
 
@@ -168,6 +169,7 @@ router.post('/:id/request-approval', async (req, res) => {
     [req.familyId, childId, choreId, choreLabel, bucks]
   )
   broadcast('chore_state', { child })
+  notifyParent(req.familyId, { title: 'Chore submitted', body: `${child} submitted "${choreLabel}" for approval` })
   res.json({ success: true })
 })
 
@@ -195,6 +197,7 @@ router.post('/:id/approve', requireParent, async (req, res) => {
   )
   broadcast('chore_state', { child })
   broadcast('bucks', { child })
+  notifyChild(req.familyId, childId, { title: 'Chore approved!', body: `You earned ${bucksEarned} Beagley Buck${bucksEarned !== 1 ? 's' : ''}` })
   res.json({ success: true, bucksEarned })
 })
 

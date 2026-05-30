@@ -12,6 +12,7 @@ import ParentApprovalsTab from './components/ParentApprovalsTab'
 import ParentGroceryTab from './components/ParentGroceryTab'
 import ParentChildrenTab from './components/ParentChildrenTab'
 import ParentCalendarTab from './components/ParentCalendarTab'
+import ParentNotificationsTab from './components/ParentNotificationsTab'
 import { useChildren } from './hooks/useChildren'
 
 const SESSION_KEY = 'parent_unlocked_at'
@@ -80,7 +81,8 @@ export default function ParentPage() {
     { id: 'store',     label: 'Mom Store'    },
     { id: 'grocery',   label: 'Grocery'      },
     { id: 'children',  label: 'Children'     },
-    { id: 'calendars', label: 'Calendars'    },
+    { id: 'calendars',     label: 'Calendars'      },
+    { id: 'notifications', label: 'Notifications'  },
   ]
 
   return (
@@ -119,7 +121,8 @@ export default function ParentPage() {
           {tab === 'store'     && <ParentMomStoreTab children={children} />}
           {tab === 'grocery'   && <ParentGroceryTab />}
           {tab === 'children'  && <ParentChildrenTab children={children} onReload={reloadChildren} />}
-          {tab === 'calendars' && <ParentCalendarTab children={children} />}
+          {tab === 'calendars'     && <ParentCalendarTab children={children} />}
+          {tab === 'notifications' && <ParentNotificationsTab children={children} />}
         </div>
       </main>
     </div>
