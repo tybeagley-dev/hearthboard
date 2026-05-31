@@ -1,0 +1,2 @@
+ALTER TABLE families
+  ADD COLUMN IF NOT EXISTS schedule_config JSONB NOT NULL DEFAULT '{}';

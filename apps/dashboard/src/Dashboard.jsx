@@ -14,12 +14,14 @@ import UpcomingModal from './components/UpcomingModal'
 import { useClock } from './hooks/useClock'
 import { useWeather } from './hooks/useWeather'
 import { useChildren } from './hooks/useChildren'
+import { useScheduleConfig } from './hooks/useRoutines'
 import { unlockAudio } from './utils/chime'
 
 export default function Dashboard() {
   const now     = useClock()
   const weather = useWeather()
   const { children } = useChildren()
+  const { scheduleConfig } = useScheduleConfig()
 
   useEffect(() => {
     if (new URLSearchParams(window.location.search).has('clearcache')) {
@@ -66,7 +68,7 @@ export default function Dashboard() {
         />
         <div className="center-stack">
           <WeatherCard weather={weather} />
-          <MealPlan now={now} />
+          <MealPlan now={now} scheduleConfig={scheduleConfig} />
         </div>
         <Calendar now={now} onExpand={() => setShowCalendar(true)} />
       </div>
@@ -75,6 +77,7 @@ export default function Dashboard() {
         <Routines
           now={now}
           children={children}
+          scheduleConfig={scheduleConfig}
           onSpinChore={(child, chores, isExtra) => setActiveChoreChild({ child, chores, isExtra: !!isExtra })}
           onScreenTime={setActiveScreenChild}
           onBucks={setActiveBucksChild}

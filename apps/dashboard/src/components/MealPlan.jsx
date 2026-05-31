@@ -2,11 +2,10 @@ import { useState } from 'react'
 import { getDayName } from '../utils/dateUtils'
 import { useMeals } from '../hooks/useMeals'
 import { getCurrentScheduleMode } from '../utils/scheduleUtils'
-import { CONFIG } from '../config/config'
 import PinModal from './PinModal'
 import MealsEditModal from './MealsEditModal'
 
-export default function MealPlan({ now }) {
+export default function MealPlan({ now, scheduleConfig = {} }) {
   const todayName = getDayName(now)
   const { meals, updateMeal, getMealForDay, DAY_ORDER } = useMeals()
   const meal = getMealForDay(todayName)
@@ -14,7 +13,7 @@ export default function MealPlan({ now }) {
   const [showPin, setShowPin]   = useState(false)
   const [showEdit, setShowEdit] = useState(false)
 
-  const mode      = getCurrentScheduleMode(now, CONFIG)
+  const mode      = getCurrentScheduleMode(now, scheduleConfig)
   const isSummer  = mode === 'summer'
   const isMorning = now.getHours() < 12
   const showLunch = isSummer && isMorning

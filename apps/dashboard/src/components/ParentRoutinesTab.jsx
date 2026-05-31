@@ -1,5 +1,7 @@
-import { useState } from 'react'
-import { useRoutineDefs, adminAddRoutineDef, adminEditRoutineDef, adminDeleteRoutineDef } from '../hooks/useRoutines'
+import { useState, useEffect } from 'react'
+import { useRoutineDefs, adminAddRoutineDef, adminEditRoutineDef, adminDeleteRoutineDef, useScheduleConfig } from '../hooks/useRoutines'
+import { CALCULATED_HOLIDAYS } from '../utils/holidayUtils'
+import { CONFIG } from '../config/config'
 
 const SCHEDULES     = ['school', 'weekend', 'summer', 'holiday']
 const SCHED_LABEL   = { school: 'School', weekend: 'Weekend', summer: 'Summer', holiday: 'Holiday' }
@@ -109,6 +111,232 @@ function RoutineForm({ def, childNames, onSave, onCancel, saving }) {
   )
 }
 
+// ── Schedule config section ───────────────────────────────────────────────────
+
+function BreakRow({ brk, onEdit, onDelete, confirmDelete, onConfirmDelete, onCancelDelete }) {
+  if (confirmDelete) {
+    return (
+      <div className="chore-admin-row deleting">
+        <span className="chore-delete-msg">Remove "{brk.name}"?</span>
+        <button className="chore-delete-yes" onClick={onConfirmDelete}>Remove</button>
+        <button className="chore-delete-no"  onClick={onCancelDelete}>Cancel</button>
+      </div>
+    )
+  }
+  return (
+    <div className="chore-admin-row">
+      <div className="chore-admin-info">
+        <span className="chore-admin-label">{brk.name}</span>
+        <span className="chore-admin-meta">{brk.start} – {brk.end}</span>
+      </div>
+      <button className="chore-admin-edit-btn" onClick={onEdit}>Edit</button>
+      <button className="chore-admin-del-btn"  onClick={onDelete}>×</button>
+    </div>
+  )
+}
+
+function BreakForm({ initial, onSave, onCancel }) {
+  const [name,  setName]  = useState(initial?.name  ?? '')
+  const [start, setStart] = useState(initial?.start ?? '')
+  const [end,   setEnd]   = useState(initial?.end   ?? '')
+
+  function handleSave() {
+    if (!name.trim() || !start || !end) return
+    onSave({ id: initial?.id ?? crypto.randomUUID(), name: name.trim(), start, end })
+  }
+
+  return (
+    <div className="sched-break-form">
+      <input
+        className="chore-form-input"
+        placeholder="Break name (e.g. Spring Break)"
+        value={name}
+        onChange={e => setName(e.target.value)}
+        autoFocus
+      />
+      <div className="sched-date-row">
+        <div className="chore-form-field">
+          <label className="chore-form-label">Start</label>
+          <input type="date" className="chore-form-input" value={start} onChange={e => setStart(e.target.value)} />
+        </div>
+        <div className="chore-form-field">
+          <label className="chore-form-label">End</label>
+          <input type="date" className="chore-form-input" value={end} onChange={e => setEnd(e.target.value)} />
+        </div>
+      </div>
+      <div className="chore-form-actions">
+        <button className="parent-apply-btn" onClick={handleSave} disabled={!name.trim() || !start || !end}>
+          {initial?.id ? 'Save Break' : 'Add Break'}
+        </button>
+        <button className="btn-cancel-spend" onClick={onCancel}>Cancel</button>
+      </div>
+    </div>
+  )
+}
+
+function ScheduleConfigSection() {
+  const { scheduleConfig, save } = useScheduleConfig()
+  const [saving,        setSaving]        = useState(false)
+  const [breakForm,     setBreakForm]     = useState(null)
+  const [deleteConfirm, setDeleteConfirm] = useState(null)
+
+  const summer           = scheduleConfig.summer           ?? { start: '', end: '' }
+  const disabledHolidays = scheduleConfig.disabledHolidays ?? []
+  const today  = new Date().toLocaleDateString('en-CA')
+  const breaks = (scheduleConfig.breaks ?? []).slice().sort((a, b) => {
+    const aUp = a.start >= today
+    const bUp = b.start >= today
+    if (aUp !== bUp) return aUp ? -1 : 1  // upcoming first
+    return aUp
+      ? a.start.localeCompare(b.start)    // upcoming: ascending
+      : b.start.localeCompare(a.start)    // past: most recent first
+  })
+
+  const [summerEditing, setSummerEditing] = useState(false)
+  const [summerDraft,   setSummerDraft]   = useState({ start: '', end: '' })
+
+  useEffect(() => {
+    if (!summerEditing) setSummerDraft(summer)
+  }, [summer.start, summer.end]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function patchConfig(patch) {
+    setSaving(true)
+    await save({ summer, disabledHolidays, breaks, ...patch }, CONFIG.parentPin)
+    setSaving(false)
+  }
+
+  async function handleSummerSave() {
+    await patchConfig({ summer: summerDraft })
+    setSummerEditing(false)
+  }
+
+  function openSummerEdit() {
+    setSummerDraft(summer)
+    setSummerEditing(true)
+  }
+
+  function toggleHoliday(id) {
+    const next = disabledHolidays.includes(id)
+      ? disabledHolidays.filter(h => h !== id)
+      : [...disabledHolidays, id]
+    patchConfig({ disabledHolidays: next })
+  }
+
+  async function handleBreakSave(brk) {
+    const next = breakForm?.id
+      ? breaks.map(b => b.id === brk.id ? brk : b)
+      : [...breaks, brk]
+    await patchConfig({ breaks: next })
+    setBreakForm(null)
+  }
+
+  async function handleBreakDelete(id) {
+    await patchConfig({ breaks: breaks.filter(b => b.id !== id) })
+    setDeleteConfirm(null)
+  }
+
+  return (
+    <div className="sched-config-section">
+      <div className="sched-config-divider">Schedule Configuration</div>
+
+      {/* Summer */}
+      <div className="sched-config-block">
+        <span className="chore-form-label">Summer Break</span>
+        {summerEditing ? (
+          <div className="sched-break-form">
+            <div className="sched-date-row">
+              <div className="chore-form-field">
+                <label className="chore-form-label">Start</label>
+                <input type="date" className="chore-form-input" value={summerDraft.start} onChange={e => setSummerDraft(p => ({ ...p, start: e.target.value }))} autoFocus />
+              </div>
+              <div className="chore-form-field">
+                <label className="chore-form-label">End</label>
+                <input type="date" className="chore-form-input" value={summerDraft.end} onChange={e => setSummerDraft(p => ({ ...p, end: e.target.value }))} />
+              </div>
+            </div>
+            <div className="chore-form-actions">
+              <button className="parent-apply-btn" onClick={handleSummerSave} disabled={saving || !summerDraft.start || !summerDraft.end}>
+                {saving ? 'Saving…' : 'Save'}
+              </button>
+              <button className="btn-cancel-spend" onClick={() => setSummerEditing(false)}>Cancel</button>
+            </div>
+          </div>
+        ) : summer.start ? (
+          <div className="chore-admin-row">
+            <div className="chore-admin-info">
+              <span className="chore-admin-label">Summer Break</span>
+              <span className="chore-admin-meta">{summer.start} – {summer.end}</span>
+            </div>
+            <button className="chore-admin-edit-btn" onClick={openSummerEdit}>Edit</button>
+          </div>
+        ) : (
+          <button className="parent-add-chore-btn" onClick={openSummerEdit}>+ Set Summer Dates</button>
+        )}
+      </div>
+
+      {/* Calculated holidays */}
+      <div className="sched-config-block">
+        <span className="chore-form-label">Federal / State Holidays</span>
+        <p className="chore-form-hint">These are calculated automatically each year. Toggle off any your school doesn't observe.</p>
+        <div className="chore-form-days sched-holidays-grid">
+          {CALCULATED_HOLIDAYS.map(h => (
+            <button
+              key={h.id}
+              className={`chore-day-chip ${!disabledHolidays.includes(h.id) ? 'active' : ''}`}
+              onClick={() => toggleHoliday(h.id)}
+              disabled={saving}
+            >
+              {h.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Family breaks */}
+      <div className="sched-config-block">
+        <span className="chore-form-label">School Breaks</span>
+        <p className="chore-form-hint">Add your school's breaks — winter break, spring break, fall break, teacher work days, etc.</p>
+
+        {breaks.map(brk => (
+          deleteConfirm === brk.id ? (
+            <BreakRow
+              key={brk.id}
+              brk={brk}
+              confirmDelete
+              onConfirmDelete={() => handleBreakDelete(brk.id)}
+              onCancelDelete={() => setDeleteConfirm(null)}
+            />
+          ) : breakForm?.id === brk.id ? (
+            <BreakForm
+              key={brk.id}
+              initial={brk}
+              onSave={handleBreakSave}
+              onCancel={() => setBreakForm(null)}
+            />
+          ) : (
+            <BreakRow
+              key={brk.id}
+              brk={brk}
+              onEdit={() => setBreakForm(brk)}
+              onDelete={() => setDeleteConfirm(brk.id)}
+            />
+          )
+        ))}
+
+        {breakForm && !breakForm.id && (
+          <BreakForm initial={null} onSave={handleBreakSave} onCancel={() => setBreakForm(null)} />
+        )}
+
+        {!breakForm && (
+          <button className="parent-add-chore-btn" onClick={() => setBreakForm({})}>
+            + Add Break
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ── Tab root ──────────────────────────────────────────────────────────────────
 
 export default function ParentRoutinesTab({ children }) {
@@ -118,6 +346,7 @@ export default function ParentRoutinesTab({ children }) {
   const [form,          setForm]          = useState(null)
   const [saving,        setSaving]        = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
+  const [schedFilter,   setSchedFilter]   = useState(SCHEDULES)
 
   async function handleSave(data) {
     setSaving(true)
@@ -135,7 +364,17 @@ export default function ParentRoutinesTab({ children }) {
     await reload()
   }
 
-  const childDefs = defs.filter(d => d.child === activeChild)
+  const childDefs = defs.filter(d =>
+    d.child === activeChild && d.schedules.some(s => schedFilter.includes(s))
+  )
+
+  function toggleSchedFilter(s) {
+    setSchedFilter(prev =>
+      prev.includes(s)
+        ? prev.length > 1 ? prev.filter(x => x !== s) : prev  // keep at least one active
+        : [...prev, s]
+    )
+  }
 
   if (form !== null) {
     return (
@@ -159,6 +398,18 @@ export default function ParentRoutinesTab({ children }) {
         ))}
       </div>
 
+      <div className="chore-form-days sched-filter-row">
+        {SCHEDULES.map(s => (
+          <button
+            key={s}
+            className={`chore-day-chip ${schedFilter.includes(s) ? 'active' : ''}`}
+            onClick={() => toggleSchedFilter(s)}
+          >
+            {SCHED_LABEL[s]}
+          </button>
+        ))}
+      </div>
+
       <button className="parent-add-chore-btn" onClick={() => setForm(emptyDef(activeChild, childNames))}>
         + Add Routine for {activeChild}
       </button>
@@ -167,7 +418,9 @@ export default function ParentRoutinesTab({ children }) {
 
       {!loading && childDefs.length === 0 && (
         <p className="parent-soon-msg">
-          No routines for {activeChild} yet.
+          {defs.filter(d => d.child === activeChild).length > 0
+            ? 'No routines match the selected filters.'
+            : `No routines for ${activeChild} yet.`}
         </p>
       )}
 
@@ -182,6 +435,8 @@ export default function ParentRoutinesTab({ children }) {
           onCancelDelete={() => setDeleteConfirm(null)}
         />
       ))}
+
+      <ScheduleConfigSection />
     </div>
   )
 }

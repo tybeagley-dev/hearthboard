@@ -1,18 +1,31 @@
 import { useState, useEffect, useCallback } from 'react'
-import { CONFIG } from '../config/config'
 import { getTodayKey } from '../utils/dateUtils'
 import { getCurrentScheduleMode } from '../utils/scheduleUtils'
 import { apiGet, apiPost, apiPut, apiDelete } from '../utils/api'
 
 const POLL_MS = 20 * 1000
 
-function configDefs() {
-  return []
+export function useScheduleConfig() {
+  const [scheduleConfig, setScheduleConfig] = useState({})
+
+  const load = useCallback(async () => {
+    const data = await apiGet('/schedule/config')
+    if (data) setScheduleConfig(data)
+  }, [])
+
+  useEffect(() => { load() }, [load])
+
+  const save = useCallback(async (config, parentToken) => {
+    const data = await apiPut('/schedule/config', config, parentToken)
+    if (data) setScheduleConfig(data)
+  }, [])
+
+  return { scheduleConfig, reload: load, save }
 }
 
-export function useRoutines(now, children = []) {
+export function useRoutines(now, children = [], scheduleConfig = {}) {
   const [completed,   setCompleted]   = useState({})
-  const [routineDefs, setRoutineDefs] = useState(configDefs)
+  const [routineDefs, setRoutineDefs] = useState([])
   const [loading,     setLoading]     = useState(true)
   const todayKey = getTodayKey(now)
 
@@ -51,7 +64,7 @@ export function useRoutines(now, children = []) {
       })
   }, [todayKey])
 
-  const mode = getCurrentScheduleMode(now, CONFIG)
+  const mode = getCurrentScheduleMode(now, scheduleConfig)
 
   const routinesByChild = {}
   children.forEach(child => {

@@ -1,4 +1,5 @@
 import { getTodayKey } from './dateUtils'
+import { getHolidayDateSet } from './holidayUtils'
 
 export const SCHEDULE_MODES = {
   school:  'school',
@@ -14,16 +15,24 @@ export const SCHEDULE_LABELS = {
   holiday: 'Break Day',
 }
 
-export function getCurrentScheduleMode(date, config) {
+// scheduleConfig shape (from DB):
+//   { summer: { start, end } | null, disabledHolidays: string[], breaks: { id, name, start, end }[] }
+export function getCurrentScheduleMode(date, scheduleConfig = {}) {
   const dayOfWeek = date.getDay()
-  const todayKey = getTodayKey(date)
-  const { schedules } = config
+  const todayKey  = getTodayKey(date)
+  const { summer, disabledHolidays = [], breaks = [] } = scheduleConfig
 
-  if (schedules.summer && todayKey >= schedules.summer.start && todayKey <= schedules.summer.end) {
+  if (summer && todayKey >= summer.start && todayKey <= summer.end) {
     return SCHEDULE_MODES.summer
   }
 
-  for (const period of schedules.breaks) {
+  const year = date.getFullYear()
+  const holidayDates = getHolidayDateSet([year - 1, year, year + 1], disabledHolidays)
+  if (holidayDates.has(todayKey)) {
+    return SCHEDULE_MODES.holiday
+  }
+
+  for (const period of breaks) {
     if (todayKey >= period.start && todayKey <= period.end) {
       return SCHEDULE_MODES.holiday
     }
