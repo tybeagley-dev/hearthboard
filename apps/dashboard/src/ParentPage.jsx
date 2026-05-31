@@ -61,7 +61,7 @@ export default function ParentPage() {
 
   if (!unlocked) {
     return (
-      <div className="parent-page-pin">
+      <div className="parent-pin-page">
         <PinModal
           prompt="Parent Panel"
           onSuccess={handleUnlock}

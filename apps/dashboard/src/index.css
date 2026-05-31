@@ -2008,6 +2008,11 @@ button {
 }
 
 /* PIN phase */
+.pin-modal {
+  max-height: none;
+  overflow-y: visible;
+}
+
 .bucks-pin-phase {
   display: flex;
   flex-direction: column;
@@ -3137,12 +3142,9 @@ button {
 .parent-open-btn:active { background: var(--border); }
 
 /* ── Parent Page ─────────────────────────────────────────────────────────── */
-.parent-page-pin {
+.parent-pin-page {
   min-height: 100vh;
   background: var(--bg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .parent-page {
