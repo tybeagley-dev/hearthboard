@@ -13,9 +13,7 @@ export default function PinModal({ onSuccess, onCancel, prompt = 'Adult PIN requ
   const inputRef = useRef(null)
   const touch = isTouchDevice()
 
-  useEffect(() => {
-    if (touch) inputRef.current?.focus()
-  }, [])
+  // Don't auto-focus on touch — numpad handles input, system keyboard would cover it
 
   useEffect(() => {
     function onKey(e) {

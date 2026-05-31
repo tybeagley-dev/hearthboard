@@ -183,7 +183,8 @@ export function useAssignedChores(childName, chores = []) {
       all[childName] = [
         ...built.map(c => ({
           ...c,
-          pending:    c.pending || (localPending.has(c.id) && !c.completed),
+          // Only trust local pending if the API also has a record — if the API deleted it (rejection), clear it
+          pending:    c.pending || (localPending.has(c.id) && !c.completed && !!data.today?.[childName]?.[c.id]),
           acceptedAt: c.acceptedAt ?? localMap[c.id]?.acceptedAt ?? null,
         })),
         ...inFlight,
