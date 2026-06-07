@@ -153,21 +153,17 @@ router.post('/:id/request-approval', async (req, res) => {
 
   const today = new Date().toISOString().slice(0, 10)
 
-  const { rows } = await db.query(
-    `SELECT id FROM chore_events
+  // Promote the existing accepted row — no new row created, so unassign always sees one row
+  const { rowCount } = await db.query(
+    `UPDATE chore_events SET status = 'pending_approval'
      WHERE family_id = $1 AND child_id = $2 AND chore_id = $3
        AND created_at::date = $4
-       AND status IN ('pending_approval', 'completed')
-     LIMIT 1`,
+       AND status = 'accepted'`,
     [req.familyId, childId, choreId, today]
   )
-  if (rows.length) return res.json({ success: true, skipped: true })
+  // Already pending or completed — nothing to do
+  if (!rowCount) return res.json({ success: true, skipped: true })
 
-  await db.query(
-    `INSERT INTO chore_events (family_id, child_id, chore_id, chore_label, bucks, status)
-     VALUES ($1, $2, $3, $4, $5, 'pending_approval')`,
-    [req.familyId, childId, choreId, choreLabel, bucks]
-  )
   broadcast('chore_state', { child })
   notifyParent(req.familyId, { title: 'Chore submitted', body: `${child} submitted "${choreLabel}" for approval` })
   res.json({ success: true })
