@@ -39,7 +39,7 @@ router.get('/family', async (req, res) => {
   if (userId) {
     try {
       // Upsert the user record so we always have a local mirror
-      const clerkUser = await clerkClient().users.getUser(userId)
+      const clerkUser = await clerkClient.users.getUser(userId)
       const email = clerkUser.emailAddresses[0]?.emailAddress ?? ''
       await db.query(
         `INSERT INTO users (id, email) VALUES ($1, $2)
@@ -48,7 +48,7 @@ router.get('/family', async (req, res) => {
       )
 
       const { rows } = await db.query(
-        `SELECT f.id, f.name FROM families f
+        `SELECT f.id, f.name, f.slug FROM families f
          JOIN family_memberships fm ON fm.family_id = f.id
          WHERE fm.user_id = $1`,
         [userId]
@@ -65,7 +65,7 @@ router.get('/family', async (req, res) => {
   const slug = req.headers['x-family-slug'] ?? process.env.DEFAULT_FAMILY_SLUG
   if (!slug) return res.status(401).json({ error: 'Unauthorized' })
   try {
-    const { rows } = await db.query('SELECT id, name FROM families WHERE slug = $1', [slug])
+    const { rows } = await db.query('SELECT id, name, slug FROM families WHERE slug = $1', [slug])
     res.json(rows[0] ?? null)
   } catch (err) {
     res.status(500).json({ error: 'Server error' })

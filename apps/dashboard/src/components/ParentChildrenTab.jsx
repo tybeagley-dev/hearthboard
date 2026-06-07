@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { apiPost, apiPut, apiDelete } from '../utils/api'
+import { useState, useEffect } from 'react'
+import { QRCodeSVG } from 'qrcode.react'
+import { apiPost, apiPut, apiDelete, apiGet } from '../utils/api'
 import { CONFIG } from '../config/config'
 
 const COLOR_PRESETS = ['#C4837A', '#6B8BA4', '#7D9B76', '#A68B5B', '#8B7BB5', '#5B9BA6', '#A67B8B', '#7BA67B']
@@ -100,10 +101,64 @@ function ChildRow({ child, onEdit, confirmDelete, onDeleteRequest, onConfirmDele
   )
 }
 
+function ChildQRSection({ children, slug }) {
+  const [copied, setCopied] = useState(null)
+
+  if (!slug) return null
+
+  function childUrl(child) {
+    return `${window.location.origin}/${slug}/child/${child.id}`
+  }
+
+  function handleCopy(child) {
+    navigator.clipboard.writeText(childUrl(child))
+    setCopied(child.id)
+    setTimeout(() => setCopied(null), 2000)
+  }
+
+  return (
+    <div className="child-qr-section">
+      <h3 className="child-qr-section-title">Child View Links</h3>
+      <div className="child-qr-list">
+        {children.map(child => (
+          <div key={child.id} className="child-qr-row">
+            <div className="child-qr-meta">
+              <span className="child-qr-avatar" style={{ background: child.color }}>{child.emoji}</span>
+              <span className="child-qr-name">{child.name}</span>
+              <button className="child-qr-copy" onClick={() => handleCopy(child)}>
+                {copied === child.id ? 'Copied!' : 'Copy URL'}
+              </button>
+            </div>
+            <div className="child-qr-code-wrap">
+              <QRCodeSVG
+                value={childUrl(child)}
+                size={128}
+                level="H"
+                fgColor={child.color}
+                bgColor="transparent"
+              />
+              <div className="child-qr-emoji-bubble">
+                {child.emoji}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function ParentChildrenTab({ children, onReload }) {
   const [form,          setForm]          = useState(null)
   const [saving,        setSaving]        = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
+  const [familySlug,    setFamilySlug]    = useState(null)
+
+  useEffect(() => {
+    apiGet('/auth/family').then(data => {
+      if (data?.slug) setFamilySlug(data.slug)
+    })
+  }, [])
 
   async function handleSave(data) {
     setSaving(true)
@@ -150,6 +205,10 @@ export default function ParentChildrenTab({ children, onReload }) {
           onCancelDelete={() => setDeleteConfirm(null)}
         />
       ))}
+
+      {children.length > 0 && (
+        <ChildQRSection children={children} slug={familySlug} />
+      )}
     </div>
   )
 }

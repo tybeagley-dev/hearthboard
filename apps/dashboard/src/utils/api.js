@@ -1,18 +1,25 @@
 import { CONFIG } from '../config/config'
 
 let _getToken = null
+let _familySlug = null
 
 export function setTokenGetter(fn) {
   _getToken = fn
 }
 
+export function setFamilySlug(slug) {
+  _familySlug = slug
+}
+
 async function apiFetch(path, options = {}) {
   const token = _getToken ? await _getToken() : null
+  const slugHeader = (!token && _familySlug) ? { 'x-family-slug': _familySlug } : {}
   return fetch(`${CONFIG.apiUrl}${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...slugHeader,
       ...options.headers,
     },
   })
