@@ -40,7 +40,7 @@ export default function FamilySetup({ onComplete }) {
     <div className="family-setup-wrap">
       <div className="family-setup-card">
         <div className="family-setup-logo">🏠</div>
-        <h1 className="family-setup-title">Welcome to Hearthboard</h1>
+        <h1 className="family-setup-title">Welcome to nestboard</h1>
         <p className="family-setup-subtitle">
           {mode === 'create'
             ? 'Set up your family dashboard.'

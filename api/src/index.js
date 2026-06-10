@@ -71,7 +71,7 @@ app.use('/push',          pushRoutes)
 app.use('/schedule',      scheduleRoutes)
 
 const PORT = process.env.PORT ?? 3001
-app.listen(PORT, () => console.log(`Hearthboard API running on port ${PORT}`))
+app.listen(PORT, () => console.log(`nestboard API running on port ${PORT}`))
 
 startExpiryJob()
 startAbstinenceJob()

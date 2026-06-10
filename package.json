@@ -1,5 +1,5 @@
 {
-  "name": "hearthboard",
+  "name": "nestboard",
   "private": true,
   "workspaces": [
     "apps/dashboard"
@@ -9,7 +9,7 @@
     "db:up": "docker compose up -d db",
     "db:down": "docker compose down",
     "db:reset": "docker compose down -v && docker compose up -d db",
-    "db:pull": "docker run --rm postgres:18 pg_dump \"$PROD_DATABASE_URL\" --data-only --no-owner --no-privileges | psql postgresql://hearthboard:hearthboard@localhost:5433/hearthboard"
+    "db:pull": "docker run --rm postgres:18 pg_dump \"$PROD_DATABASE_URL\" --data-only --no-owner --no-privileges | psql postgresql://nestboard:nestboard@localhost:5433/nestboard"
   },
   "devDependencies": {
     "concurrently": "^9.2.1"

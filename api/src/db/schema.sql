@@ -1,4 +1,4 @@
--- Hearthboard schema
+-- nestboard schema
 -- Run via: npm run migrate
 
 -- ── Multi-tenant root tables ───────────────────────────────────────────────────

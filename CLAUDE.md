@@ -1,4 +1,4 @@
-# Hearthboard — Project Instructions
+# nestboard — Project Instructions
 
 ## Local dev
 
@@ -20,6 +20,6 @@ The following ports are in use by other services on this machine:
 
 - **API:** `api/` — Node/Express/Postgres, Railway deployment
 - **Dashboard:** `apps/dashboard/` — React/Vite, Railway static deployment
-- **API URL (prod):** `https://hearthboard-production.up.railway.app`
+- **API URL (prod):** `https://nestboard-production.up.railway.app`
 - **Local API:** `http://localhost:3001`
 - **Local dashboard:** `http://localhost:5173`
